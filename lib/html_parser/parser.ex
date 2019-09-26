@@ -1,46 +1,35 @@
 defmodule Scrape.Parser do
-
-  def get_fake_reviews(html) do
-    all_reviews = Floki.find(html, ".review-entry")
-
-    all_reviews
-    |> filter_by_stars
-    |> filter_by_username
-
-  end
+  alias Scrape.HtmlParser.{Stars, Username, RepeatUsers}
 
   def get_reviews(html) do
     Floki.find(html, ".review-entry")
+    |> get_fakeness
+    |> order_by_fakeness
+    |> get_top_three([], 0)
+
   end
 
-  def filter_by_stars(reviews) when is_list(reviews) do
-    Enum.filter(reviews, fn review -> 
-      Floki.find(review, ".dealership-rating")
-      |> Floki.find(".rating-50")
-      |> has_five_stars()
+  defp get_fakeness(reviews) do
+    Enum.reduce(reviews, [], fn review, acc -> 
+      new_review = 
+      %{fakeness: 0, review: review}
+      |> Stars.get_star_point()
+      |> RepeatUsers.get_repeat_point(reviews)
+      |> Username.get_username_point()
+
+      acc ++ [new_review]
     end)
   end
 
-
-  def has_five_stars([]), do: false
-  def has_five_stars(content), do: true 
-
-  def filter_by_username(reviews) when is_list(reviews) do
-    Enum.filter(reviews, fn review -> 
-      
-      Floki.find(review, ".margin-bottom-sm, .line-height-150")
-      |> Floki.find("span")
-      |> Floki.text()
-      |> check_username
-    end)
+  defp order_by_fakeness(reviews) do
+    Enum.sort_by(reviews, fn(r) -> r.fakeness end, &>=/2)
   end
 
-  def check_username(name) when is_binary(name) do
-    name
-    |> String.replace(~r/[^\d]/, "")
-    |> check_digits()
+  defp get_top_three([head | tail], top_three, length) do
+    if length == 3 do
+      top_three
+    else
+      get_top_three(tail, top_three ++ [head.review], length + 1)
+    end 
   end
-
-  def check_digits(""), do: false
-  def check_digits(numbers), do: true
 end

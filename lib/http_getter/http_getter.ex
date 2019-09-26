@@ -5,5 +5,5 @@ defmodule Scrape.HttpGetter do
      {:ok, response.body}
     end
   end
-  
+
 end
