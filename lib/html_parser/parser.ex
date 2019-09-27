@@ -1,4 +1,7 @@
 defmodule Scrape.Parser do
+  @moduledoc """
+  Takes in raw html and returns the top three possibly fake reviews.
+  """
   alias Scrape.HtmlParser.{Stars, Username, RepeatUsers}
 
   def get_reviews(html) do

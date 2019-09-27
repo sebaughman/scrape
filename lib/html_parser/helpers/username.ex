@@ -1,4 +1,7 @@
 defmodule Scrape.HtmlParser.Username do
+  @moduledoc """
+  Takes in a review and adds a point to fakeness if the username contains a number
+  """
   
   def get_username_point(%{fakeness: fakeness, review: review}) do
     username_point = 
